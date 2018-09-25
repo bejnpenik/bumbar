@@ -131,11 +131,22 @@ int event_handler(xcb_ewmh_connection_t * ewmh, int default_screen, generic_even
 			d_event.win = event.win;
 			nbr_of_desktops = update_desktop_list(ewmh, default_screen, d_event, task_list, nbr_of_tasks, desktop_list, nbr_of_desktops);
 			*number_of_desktops = nbr_of_desktops;	
-			return 1;	
+			return 1;
+		case TASK_DESKTOP_EVENT:
+			t_event.event = TASK_DESKTOP_CHANGE;
+			t_event.win = event.win;
+			nbr_of_tasks = update_task_list(ewmh, default_screen, t_event, task_list, nbr_of_tasks);
+			d_event.event = TASK_NUMBER_CHANGE;
+			d_event.win = event.win;
+			nbr_of_desktops = update_desktop_list(ewmh, default_screen, d_event, task_list, nbr_of_tasks, desktop_list, nbr_of_desktops);
+			*number_of_desktops = nbr_of_desktops;	
+				
 		default:
 			return 0;		
 	}
 	return 0;
 }
+
+
 
 
