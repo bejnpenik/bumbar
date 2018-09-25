@@ -23,7 +23,7 @@ typedef enum {
 
 typedef struct task {
 	xcb_window_t win;
-	char title[256];
+	char *title;
 	task_state_t state;
 	int desktop_cardinal;
 } task_t;
@@ -36,6 +36,7 @@ int update_task_list(xcb_ewmh_connection_t *, int, task_event_t, task_t *, int);
 void task_focus_change_event(xcb_ewmh_connection_t *, int, task_t *, int);
 void task_state_change_event(xcb_ewmh_connection_t *, task_t *, int, xcb_window_t);
 void task_name_change_event(xcb_ewmh_connection_t *, task_t *, int, xcb_window_t);
+void task_desktop_change_event(xcb_ewmh_connection_t *, task_t *, int, xcb_window_t);
 int task_list_change_event(xcb_ewmh_connection_t * , int , task_t *);
 void register_win_events(xcb_connection_t *, xcb_window_t);
 task_t init_task(void);
