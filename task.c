@@ -80,6 +80,11 @@ int get_task_desktop(xcb_ewmh_connection_t *ewmh, xcb_window_t win){
 }
 int task_list_change_event(xcb_ewmh_connection_t * ewmh, int default_screen, task_t *task_list){
 	int nbr_of_tasks = 0;
+	for (int i = 0; i < MAX_TASK_NBR; i++) 
+		if (task_list[i].title != NULL){
+			free(task_list[i].title);
+			task_list[i].title = NULL;
+		}
 	xcb_ewmh_get_windows_reply_t win_reply;xcb_window_t *wins = NULL;
 	if (xcb_ewmh_get_client_list_reply(ewmh, xcb_ewmh_get_client_list(ewmh, default_screen), 
 										&win_reply, NULL)  == 1) {
@@ -104,8 +109,7 @@ void task_name_change_event(xcb_ewmh_connection_t * ewmh, task_t *task_list, int
 			if (tit_len > 0){
 				task_list[i].title = (char*)malloc(tit_len+1);
 				memset(task_list[i].title, 0, tit_len+1);
-			    strncpy(task_list[i].title, tmp_arr, tit_len+1);
-				
+			    	strncpy(task_list[i].title, tmp_arr, tit_len+1);	
 			}else{
 				task_list[i].title = (char*)malloc(3);
 				memset(task_list[i].title, 0, 3);
