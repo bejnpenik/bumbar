@@ -68,14 +68,15 @@ void desktop_change_names_event(xcb_ewmh_connection_t * ewmh, int default_screen
 	char tmp_arr[MAXLEN] = {0};
 	int nlen = 0;
 	for (int i=0; i < nbr_of_desktops; i++)
-			if (xcb_ewmh_get_desktop_names_reply(ewmh, xcb_ewmh_get_desktop_names(ewmh, default_screen), &names, NULL) == 1){
-				copy_prop(tmp_arr, names.strings, names.strings_len, i, nbr_of_desktops);
-				nlen = strlen(tmp_arr);
-				if (realloc(desktop_list[i].name, nlen+1))
-					strncpy(desktop_list[i].name, tmp_arr, nlen+1);
-				xcb_ewmh_get_utf8_strings_reply_wipe(&names);
-			
-			}
+		if (xcb_ewmh_get_desktop_names_reply(ewmh, xcb_ewmh_get_desktop_names(ewmh, default_screen), &names, NULL) == 1){
+			copy_prop(tmp_arr, names.strings, names.strings_len, i, nbr_of_desktops);
+			nlen = strlen(tmp_arr);
+			if (desktop_list[i].name != NULL) free(desktop_list[i].name);
+			desktop_list[i].name = (char*)malloc(nlen+1);
+			strncpy(desktop_list[i].name, tmp_arr, nlen+1);
+			xcb_ewmh_get_utf8_strings_reply_wipe(&names);
+		
+		}
 }
 void desktop_focus_change_event(xcb_ewmh_connection_t * ewmh, int default_screen, desktop_t *desktop_list, int nbr_of_desktops){
 	int focused_desktop;
@@ -101,8 +102,16 @@ int desktop_number_change_event(xcb_ewmh_connection_t * ewmh, int default_screen
 	xcb_ewmh_get_utf8_strings_reply_t names;
 	char tmp_arr[MAXLEN] = {0};
 	if (xcb_ewmh_get_number_of_desktops_reply(ewmh, xcb_ewmh_get_number_of_desktops(ewmh, default_screen), &tmp_nbr_of_desks, NULL) != 1){
-		printf("Can't get current number of desktops!\n");
+		fprintf(stderr, "Can't get current number of desktops!\n");
+		for (int i = 0; i < nbr_of_desktops; i++){
+			free(desktop_list[i].name); desktop_list[i].name = NULL;
+			free(desktop_list[i].tasks); desktop_list[i].tasks = NULL;
+		}
 		return nbr_of_desktops;
+	}
+	for (int i = 0; i < nbr_of_desktops; i++){
+			free(desktop_list[i].name); desktop_list[i].name = NULL;
+			free(desktop_list[i].tasks); desktop_list[i].tasks = NULL;
 	}
 	nbr_of_desktops = tmp_nbr_of_desks;
 	if (xcb_ewmh_get_desktop_names_reply(ewmh, xcb_ewmh_get_desktop_names(ewmh, default_screen), &names, NULL) == 1){
@@ -111,16 +120,9 @@ int desktop_number_change_event(xcb_ewmh_connection_t * ewmh, int default_screen
 			copy_prop(tmp_arr, names.strings, names.strings_len, i, nbr_of_desktops);
 			nlen = strlen(tmp_arr);
 			
-			if (desktop_list[i].name != NULL){
-				if (realloc(desktop_list[i].name, nlen+1))
-					strncpy(desktop_list[i].name, tmp_arr, nlen+1);
-			}
-			else{
-				desktop_list[i].name = malloc(nlen+1);
-				if (desktop_list[i].name){
-					strncpy(desktop_list[i].name, tmp_arr, nlen+1);
-				}
-			}
+			if (desktop_list[i].name != NULL) free(desktop_list[i].name);
+			desktop_list[i].name = (char*)malloc(nlen+1);
+			strncpy(desktop_list[i].name, tmp_arr, nlen+1);
 		}
 		assign_tasks_to_desktop(task_list, nbr_of_tasks, desktop_list, nbr_of_desktops);
 		if (xcb_ewmh_get_current_desktop_reply(ewmh, xcb_ewmh_get_current_desktop(ewmh, default_screen), &focused_desktop, NULL) != 1){
