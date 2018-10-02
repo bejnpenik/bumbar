@@ -149,4 +149,3 @@ int event_handler(xcb_ewmh_connection_t * ewmh, int default_screen, generic_even
 
 
 
-
