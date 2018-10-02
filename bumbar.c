@@ -50,54 +50,59 @@ void setup(void)
 void print_output(desktop_t *desktop_list, int nbr_of_desktops){
 	for (int i=0; i<nbr_of_desktops; i++){
 		if (desktop_list[i].state == FOCUSED_DESKTOP)
-			printf("F:Desktop %d: %s %d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
+			printf("F:%d:%s:%d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
 		if (desktop_list[i].state == OCCUPIED_DESKTOP)
-			printf("O:Desktop %d: %s %d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
+			printf("O:%d:%s:%d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
 		if (desktop_list[i].state == UNOCCUPIED_DESKTOP)
-			printf("U:Desktop %d: %s %d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
+			printf("U:%d:%s:%d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
 		for (int j=0; j < desktop_list[i].number_of_tasks; j++){
 			if (desktop_list[i].tasks[j].state == FOCUSED_TASK)
-				printf("\tF: win:%d, title: %s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
+				printf("\tF:%d:%s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
 			if (desktop_list[i].tasks[j].state == VISIBLE_TASK)
-				printf("\tV: win:%d, title: %s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
+				printf("\tV:%d:%s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
 			if (desktop_list[i].tasks[j].state == HIDDEN_TASK)
-				printf("\tH: win:%d, title: %s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
+				printf("\tH:%d:%s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
 			if (desktop_list[i].tasks[j].state == UNKNOWN)
-				printf("\tU: win:%d, title: %s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
+				printf("\tU:%d:%s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
 			
 		}
 	}
+	fflush(stdout);
 }
 
 void print_output_to_fifo(desktop_t *desktop_list, int nbr_of_desktops){
 	int fifo_fd = open(FIFO_NAME, O_WRONLY|O_NONBLOCK);
 	char write_arr[(MAX_TASK_NBR+MAX_DESKTOP_NBR)*2*MAXLEN] = {0};
 	char tmp_arr[2*MAXLEN] = {0};
+	int written = 0;
 	if (fifo_fd != -1){
 		*write_arr = '\0';
 		for (int i=0; i<nbr_of_desktops; i++){
 			if (desktop_list[i].state == FOCUSED_DESKTOP)
-				sprintf(tmp_arr, "F:Desktop %d: %s %d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
+				sprintf(tmp_arr, "F:%d:%s:%d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
 			if (desktop_list[i].state == OCCUPIED_DESKTOP)
-				sprintf(tmp_arr, "O:Desktop %d: %s %d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
+				sprintf(tmp_arr, "O:%d:%s:%d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
 			if (desktop_list[i].state == UNOCCUPIED_DESKTOP)
-				sprintf(tmp_arr, "U:Desktop %d: %s %d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
+				sprintf(tmp_arr, "U:%d:%s:%d\n", desktop_list[i].cardinal, desktop_list[i].name, desktop_list[i].number_of_tasks);
 			strcat(write_arr, tmp_arr);
 			for (int j=0; j < desktop_list[i].number_of_tasks; j++){
 				memset(tmp_arr, 0, 2*MAXLEN);
 				if (desktop_list[i].tasks[j].state == FOCUSED_TASK)
-					sprintf(tmp_arr, "\tF: win:%d, title: %s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
+					sprintf(tmp_arr, "\tF:%d:%s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
 				if (desktop_list[i].tasks[j].state == VISIBLE_TASK)
-					sprintf(tmp_arr, "\tV: win:%d, title: %s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
+					sprintf(tmp_arr, "\tV:%d:%s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
 				if (desktop_list[i].tasks[j].state == HIDDEN_TASK)
-					sprintf(tmp_arr, "\tH: win:%d, title: %s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
+					sprintf(tmp_arr, "\tH:%d:%s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
 				if (desktop_list[i].tasks[j].state == UNKNOWN)
-					sprintf(tmp_arr, "\tU: win:%d, title: %s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
+					sprintf(tmp_arr, "\tU:%d:%s\n", desktop_list[i].tasks[j].win, desktop_list[i].tasks[j].title);
 				strcat(write_arr, tmp_arr);
 				
 			}
 		}
-		write(fifo_fd, write_arr, strlen(write_arr)+1);
+		 while(written < strlen(write_arr)+1) {
+    		written += write(fifo_fd, write_arr+written, strlen(write_arr)+1-written);
+  		}
+		//write(fifo_fd, write_arr, strlen(write_arr)+1);
 		close(fifo_fd);
 	}
 }
