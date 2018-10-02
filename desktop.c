@@ -83,7 +83,6 @@ void desktop_focus_change_event(xcb_ewmh_connection_t * ewmh, int default_screen
 	if (xcb_ewmh_get_current_desktop_reply(ewmh, xcb_ewmh_get_current_desktop(ewmh, default_screen), &focused_desktop, NULL) != 1){
 			focused_desktop = -1;
 		}
-	printf("Focused : %d\n", focused_desktop);
 	for (int i=0; i < nbr_of_desktops; i++){
 		if (desktop_list[i].cardinal == focused_desktop){
 			desktop_list[i].state = FOCUSED_DESKTOP;
